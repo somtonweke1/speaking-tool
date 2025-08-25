@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .speaking-card {
+    @apply bg-white rounded-xl shadow-lg p-6 border border-gray-200;
+  }
+  
+  .speaking-button {
+    @apply px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95;
+  }
+  
+  .speaking-button-primary {
+    @apply speaking-button bg-blue-600 text-white hover:bg-blue-700 shadow-md;
+  }
+  
+  .speaking-button-secondary {
+    @apply speaking-button bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+  
+  .volume-indicator {
+    @apply w-4 h-4 rounded-full transition-all duration-100;
+  }
+  
+  .feedback-item {
+    @apply flex items-center gap-3 p-3 rounded-lg border-l-4;
+  }
+  
+  .feedback-positive {
+    @apply feedback-item border-l-green-500 bg-green-50 text-green-800;
+  }
+  
+  .feedback-improvement {
+    @apply feedback-item border-l-yellow-500 bg-yellow-50 text-yellow-800;
+  }
+  
+  .feedback-critical {
+    @apply feedback-item border-l-red-500 bg-red-50 text-red-800;
+  }
+}
