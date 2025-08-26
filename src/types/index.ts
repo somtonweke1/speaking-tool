@@ -31,9 +31,9 @@ export interface SpeechAnalysis {
 
 export interface FeedbackItem {
   type: 'positive' | 'improvement' | 'critical';
-  category: 'volume' | 'clarity' | 'coherence' | 'general';
+  category: 'volume' | 'clarity' | 'coherence' | 'general' | 'confidence' | 'accent' | 'presence' | 'executive';
   message: string;
-  suggestion?: string;
+  suggestion: string;
   priority: 'low' | 'medium' | 'high';
 }
 
