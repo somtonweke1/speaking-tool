@@ -5,13 +5,9 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// Database configuration
+// Database configuration for Railway
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'speaking_tool',
-  password: process.env.DB_PASSWORD || 'password',
-  port: process.env.DB_PORT || 5432,
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
@@ -32,7 +28,7 @@ export const connectDB = async () => {
 };
 
 // Create database tables
-const createTables = async (client) => {
+export const createTables = async (client) => {
   try {
     // Users table
     await client.query(`
@@ -98,10 +94,10 @@ const createTables = async (client) => {
 
     console.log('✅ Database tables created successfully');
   } catch (error) {
-    console.error('❌ Error creating tables:', error);
+    console.error('❌ Failed to create tables:', error);
     throw error;
   }
 };
 
-// Export pool for use in other files
-export default pool;
+// Export pool for use in other modules
+export { pool };
