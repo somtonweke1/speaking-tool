@@ -1,157 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, BarChart3, BookOpen, Trophy, Settings } from 'lucide-react';
-import SpeakingSession from './components/SpeakingSession';
-import ProgressDashboard from './components/ProgressDashboard';
-import QuestionLibrary from './components/QuestionLibrary';
-import Achievements from './components/Achievements';
-import SettingsPanel from './components/SettingsPanel';
-import { UserProgress } from './types/index';
-
-type AppView = 'session' | 'progress' | 'library' | 'achievements' | 'settings';
+import React from 'react'
 
 function App() {
-  const [currentView, setCurrentView] = useState<AppView>('session');
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    totalSessions: 0,
-    averageScore: 0,
-    bestScore: 0,
-    categories: {},
-    streak: 0
-  });
-
-  // Load user progress from localStorage on app start
-  useEffect(() => {
-    const savedProgress = localStorage.getItem('speakingToolProgress');
-    if (savedProgress) {
-      try {
-        setUserProgress(JSON.parse(savedProgress));
-      } catch (error) {
-        console.error('Error loading saved progress:', error);
-      }
-    }
-  }, []);
-
-  // Save user progress to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('speakingToolProgress', JSON.stringify(userProgress));
-  }, [userProgress]);
-
-  const updateProgress = (newProgress: Partial<UserProgress>) => {
-    setUserProgress(prev => ({ ...prev, ...newProgress }));
-  };
-
-  const navigationItems = [
-    { id: 'session', label: 'Practice', icon: Mic, color: 'text-blue-600' },
-    { id: 'progress', label: 'Progress', icon: BarChart3, color: 'text-green-600' },
-    { id: 'library', label: 'Questions', icon: BookOpen, color: 'text-purple-600' },
-    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'text-yellow-600' },
-    { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' }
-  ];
-
-  const renderCurrentView = () => {
-    switch (currentView) {
-      case 'session':
-        return <SpeakingSession onProgressUpdate={updateProgress} />;
-      case 'progress':
-        return <ProgressDashboard progress={userProgress} />;
-      case 'library':
-        return <QuestionLibrary />;
-      case 'achievements':
-        return <Achievements progress={userProgress} />;
-      case 'settings':
-        return <SettingsPanel />;
-      default:
-        return <SpeakingSession onProgressUpdate={updateProgress} />;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  <span className="text-blue-600">Speaking</span>Tool
-                </h1>
-              </div>
-            </div>
-            
-            {/* Quick Stats */}
-            <div className="hidden md:flex items-center space-x-6">
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Sessions</div>
-                <div className="text-lg font-semibold text-gray-900">{userProgress.totalSessions}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Best Score</div>
-                <div className="text-lg font-semibold text-gray-900">{userProgress.bestScore}%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Streak</div>
-                <div className="text-lg font-semibold text-gray-900">{userProgress.streak} days</div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          🎤 SpeakingTool
+        </h1>
+        <p className="text-xl text-gray-600 mb-8">
+          AI-Powered Public Speaking Coach
+        </p>
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md">
+          <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+            ✅ App is Working!
+          </h2>
+          <p className="text-gray-600">
+            If you can see this message, your React app is successfully deployed on Vercel!
+          </p>
+          <div className="mt-6 p-4 bg-green-50 rounded-lg">
+            <p className="text-green-800 font-medium">
+              🚀 Deployment Status: SUCCESS
+            </p>
           </div>
         </div>
-      </header>
-
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.id;
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentView(item.id as AppView)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                    isActive
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentView}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {renderCurrentView()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-500 text-sm">
-            <p>SpeakingTool - Master the art of public speaking</p>
-            <p className="mt-2">Practice, improve, and excel in your communication skills</p>
-          </div>
-        </div>
-      </footer>
+      </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
