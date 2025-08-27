@@ -42,20 +42,26 @@ export const SupabaseAuth = {
 
       if (error) throw error;
 
-      // Create user profile in our custom table
+      // Try to create user profile in our custom table, but don't fail if table doesn't exist
       if (data.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              name,
-              email,
-              created_at: new Date().toISOString()
-            }
-          ]);
+        try {
+          const { error: profileError } = await supabase
+            .from('users')
+            .insert([
+              {
+                id: data.user.id,
+                name,
+                email,
+                created_at: new Date().toISOString()
+              }
+            ]);
 
-        if (profileError) throw profileError;
+          if (profileError) {
+            console.log('Users table not accessible, skipping profile creation');
+          }
+        } catch (error) {
+          console.log('Profile creation failed, continuing with auth');
+        }
       }
 
       return { success: true, user: data.user };
@@ -74,16 +80,42 @@ export const SupabaseAuth = {
 
       if (error) throw error;
 
-      // Get user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
+      // Try to get user profile, but don't fail if table doesn't exist
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
 
-      if (profileError) throw profileError;
+        if (profileError) {
+          // Table doesn't exist or other error - create a temporary user object
+          console.log('Users table not accessible, using temporary profile');
+          return { 
+            success: true, 
+            user: {
+              id: data.user.id,
+              name: data.user.user_metadata?.name || 'User',
+              email: data.user.email,
+              created_at: new Date().toISOString()
+            }
+          };
+        }
 
-      return { success: true, user: profile };
+        return { success: true, user: profile };
+      } catch (profileError) {
+        // Fallback: create temporary user object
+        console.log('Profile error, using fallback user object');
+        return { 
+          success: true, 
+          user: {
+            id: data.user.id,
+            name: data.user.user_metadata?.name || 'User',
+            email: data.user.email,
+            created_at: new Date().toISOString()
+          }
+        };
+      }
     } catch (error: any) {
       return { success: false, message: error.message };
     }

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Database Tables</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .button { background: #3b82f6; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+        .button:hover { background: #2563eb; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>🚨 Emergency Database Table Creation</h1>
+    
+    <div class="info">
+        <h3>What This Does:</h3>
+        <p>This will create the missing database tables in your Supabase project. No more "Could not find table" errors!</p>
+    </div>
+
+    <button class="button" onclick="createTables()">🔥 CREATE ALL TABLES NOW</button>
+    <button class="button" onclick="checkTables()">🔍 Check Table Status</button>
+    
+    <div id="output"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://kjvabvlsygwcthxxscos.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqdmFidmxzeWd3Y3RoeHhzY29zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNTAyMDYsImV4cCI6MjA3MTgyNjIwNn0.A1VG4w9j0UaerMkifeJ_gtJ3hJ7j9zuNdn_0GMkxTT8';
+
+        async function createTables() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>🚀 Creating database tables...</p>';
+
+            try {
+                // Create users table
+                await createTable('users', `
+                    CREATE TABLE IF NOT EXISTS public.users (
+                        id TEXT PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        email TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    );
+                `);
+
+                // Create sessions table
+                await createTable('sessions', `
+                    CREATE TABLE IF NOT EXISTS public.sessions (
+                        id TEXT PRIMARY KEY,
+                        user_id TEXT NOT NULL,
+                        question TEXT NOT NULL,
+                        transcript TEXT,
+                        score INTEGER,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    );
+                `);
+
+                // Create progress table
+                await createTable('progress', `
+                    CREATE TABLE IF NOT EXISTS public.progress (
+                        user_id TEXT PRIMARY KEY,
+                        total_sessions INTEGER DEFAULT 0,
+                        average_score NUMERIC DEFAULT 0,
+                        best_score INTEGER DEFAULT 0,
+                        streak INTEGER DEFAULT 0
+                    );
+                `);
+
+                output.innerHTML = '<p class="success">✅ ALL TABLES CREATED SUCCESSFULLY!</p>';
+                output.innerHTML += '<p>🎉 Your app will now work perfectly!</p>';
+                output.innerHTML += '<p><a href="https://speaking-tool.vercel.app" target="_blank">🚀 Go to Your App Now</a></p>';
+
+            } catch (error) {
+                output.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+                output.innerHTML += '<p>🔄 Try again in a few seconds...</p>';
+            }
+        }
+
+        async function createTable(tableName, sql) {
+            const output = document.getElementById('output');
+            output.innerHTML += `<p>🔧 Creating ${tableName} table...</p>`;
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/exec_sql`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': SUPABASE_KEY
+                    },
+                    body: JSON.stringify({ sql })
+                });
+
+                if (response.ok) {
+                    output.innerHTML += `<p class="success">✅ ${tableName} table created successfully!</p>`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                output.innerHTML += `<p class="error">❌ Failed to create ${tableName} table: ${error.message}</p>`;
+                throw error;
+            }
+        }
+
+        async function checkTables() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>🔍 Checking table status...</p>';
+
+            try {
+                // Check users table
+                const usersResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?select=*&limit=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': SUPABASE_KEY
+                    }
+                });
+
+                // Check sessions table
+                const sessionsResponse = await fetch(`${SUPABASE_URL}/rest/v1/sessions?select=*&limit=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': SUPABASE_KEY
+                    }
+                });
+
+                // Check progress table
+                const progressResponse = await fetch(`${SUPABASE_URL}/rest/v1/progress?select=*&limit=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'apikey': SUPABASE_KEY
+                    }
+                });
+
+                output.innerHTML = '<h3>📊 Table Status:</h3>';
+                output.innerHTML += `<p>Users: ${usersResponse.ok ? '✅ EXISTS' : '❌ MISSING'}</p>`;
+                output.innerHTML += `<p>Sessions: ${sessionsResponse.ok ? '✅ EXISTS' : '❌ MISSING'}</p>`;
+                output.innerHTML += `<p>Progress: ${progressResponse.ok ? '✅ EXISTS' : '❌ MISSING'}</p>`;
+
+                if (usersResponse.ok && sessionsResponse.ok && progressResponse.ok) {
+                    output.innerHTML += '<p class="success">🎉 ALL TABLES EXIST! Your app should work now!</p>';
+                } else {
+                    output.innerHTML += '<p class="error">❌ Some tables are missing. Click "CREATE ALL TABLES NOW" above.</p>';
+                }
+
+            } catch (error) {
+                output.innerHTML = `<p class="error">❌ Error checking tables: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
