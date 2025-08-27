@@ -87,7 +87,16 @@ export const SupabaseAuth = {
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes('Email not confirmed')) {
+          return { success: false, message: 'Email not confirmed. Please check your email and click the confirmation link.' };
+        } else if (error.message.includes('Invalid login credentials')) {
+          return { success: false, message: 'Invalid email or password. Please check your credentials.' };
+        } else {
+          throw error;
+        }
+      }
 
       // Try to get user profile, but don't fail if table doesn't exist
       try {

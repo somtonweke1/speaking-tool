@@ -36,7 +36,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onLoginSuccess 
       if (result.success) {
         onLoginSuccess(result.user);
       } else {
-        setError(result.message || 'Login failed');
+        // Handle specific error cases
+        if (result.message && result.message.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before signing in. Check your spam folder if you don\'t see it.');
+        } else if (result.message && result.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.');
+        } else {
+          setError(result.message || 'Login failed. Please try again.');
+        }
       }
     } catch (err) {
       setError('Login error. Please try again.');
@@ -141,6 +148,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onLoginSuccess 
               Sign up here
             </button>
           </p>
+          
+          {/* Helpful guidance for email confirmation */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <strong>Having trouble signing in?</strong> Make sure you've confirmed your email address by clicking the link we sent you.
+            </p>
+          </div>
         </div>
       </div>
     </motion.div>
