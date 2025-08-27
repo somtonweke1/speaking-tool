@@ -11,6 +11,7 @@ import AuthContainer from './components/Auth/AuthContainer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserProgress } from './types/index';
 import { SupabaseProgress } from './config/api';
+import { DatabaseSetup } from './components/DatabaseSetup';
 
 type AppView = 'session' | 'progress' | 'library' | 'achievements' | 'settings';
 
@@ -221,6 +222,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
+      <DatabaseSetup />
       <AppContent />
     </AuthProvider>
   );
