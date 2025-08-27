@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, BarChart3, BookOpen, Trophy, Settings, Server } from 'lucide-react';
+import { Mic, BarChart3, BookOpen, Trophy, Settings, Server, LogOut, User } from 'lucide-react';
 import SpeakingSession from './components/SpeakingSession';
 import ProgressDashboard from './components/ProgressDashboard';
 import QuestionLibrary from './components/QuestionLibrary';
 import Achievements from './components/Achievements';
 import SettingsPanel from './components/SettingsPanel';
 import BackendTest from './components/BackendTest';
+import AuthContainer from './components/Auth/AuthContainer';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserProgress } from './types/index';
 
 type AppView = 'session' | 'progress' | 'library' | 'achievements' | 'settings' | 'backend-test';
 
-function App() {
+function AppContent() {
+  const { user, logout, isLoading } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>('session');
   const [userProgress, setUserProgress] = useState<UserProgress>({
     totalSessions: 0,
@@ -42,6 +45,11 @@ function App() {
     setUserProgress(prev => ({ ...prev, ...newProgress }));
   };
 
+  const handleLogout = () => {
+    logout();
+    setCurrentView('session');
+  };
+
   const navigationItems = [
     { id: 'session', label: 'Practice', icon: Mic, color: 'text-blue-600' },
     { id: 'progress', label: 'Progress', icon: BarChart3, color: 'text-green-600' },
@@ -70,6 +78,24 @@ function App() {
     }
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading SpeakingTool...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication if user is not logged in
+  if (!user) {
+    return <AuthContainer onAuthSuccess={() => {}} />;
+  }
+
+  // Show main app if user is logged in
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -84,19 +110,36 @@ function App() {
               </div>
             </div>
             
-            {/* Quick Stats */}
-            <div className="hidden md:flex items-center space-x-6">
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Sessions</div>
-                <div className="text-lg font-semibold text-gray-900">{userProgress.totalSessions}</div>
+            {/* User Info and Quick Stats */}
+            <div className="flex items-center space-x-6">
+              <div className="hidden md:flex items-center space-x-6">
+                <div className="text-center">
+                  <div className="text-sm text-gray-500">Sessions</div>
+                  <div className="text-lg font-semibold text-gray-900">{userProgress.totalSessions}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-500">Best Score</div>
+                  <div className="text-lg font-semibold text-gray-900">{userProgress.bestScore}%</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-500">Streak</div>
+                  <div className="text-lg font-semibold text-gray-900">{userProgress.streak} days</div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Best Score</div>
-                <div className="text-lg font-semibold text-gray-900">{userProgress.bestScore}%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-500">Streak</div>
-                <div className="text-lg font-semibold text-gray-900">{userProgress.streak} days</div>
+              
+              {/* User Menu */}
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 text-gray-700">
+                  <User className="w-5 h-5" />
+                  <span className="font-medium">{user.name}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">Logout</span>
+                </button>
               </div>
             </div>
           </div>
@@ -155,6 +198,14 @@ function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

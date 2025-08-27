@@ -36,9 +36,13 @@ export const buildApiUrl = (endpoint: string): string => {
 export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   const url = buildApiUrl(endpoint);
   
+  // Get token from localStorage
+  const token = localStorage.getItem('token');
+  
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
     ...options,
@@ -51,7 +55,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
       throw new Error(`API call failed: ${response.status} ${response.statusText}`);
     }
     
-    return await response.json();
+    return response;
   } catch (error) {
     console.error('API call error:', error);
     throw error;

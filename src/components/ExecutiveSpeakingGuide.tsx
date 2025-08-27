@@ -181,29 +181,29 @@ const ExecutiveSpeakingGuide: React.FC<ExecutiveSpeakingGuideProps> = ({ onClose
             </div>
           </div>
 
-          {/* Accent Empowerment Section */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-8">
+          {/* Advanced Speaking Techniques */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 mb-8">
             <h3 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-              <Zap className="w-6 h-6 text-green-600 mr-2" />
-              Your Accent is Your Power
+              <TrendingUp className="w-6 h-6 text-purple-600 mr-2" />
+              Advanced Speaking Techniques
             </h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-3">Why Your Accent Matters:</h4>
+                <h4 className="text-lg font-semibold text-gray-800 mb-3">Voice Projection:</h4>
                 <ul className="space-y-2 text-gray-700">
-                  <li>• Shows global business experience</li>
-                  <li>• Demonstrates cultural intelligence</li>
-                  <li>• Sets you apart in international markets</li>
-                  <li>• Adds authenticity to your message</li>
+                  <li>• Practice diaphragmatic breathing</li>
+                  <li>• Use your chest voice for authority</li>
+                  <li>• Project to the back of the room</li>
+                  <li>• Maintain consistent volume</li>
                 </ul>
               </div>
               <div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-3">Accent Confidence Tips:</h4>
+                <h4 className="text-lg font-semibold text-gray-800 mb-3">Clarity & Articulation:</h4>
                 <ul className="space-y-2 text-gray-700">
-                  <li>• Practice your native phrases with pride</li>
-                  <li>• Use your accent to emphasize key points</li>
-                  <li>• Remember: clarity &gt; perfect pronunciation</li>
-                  <li>• Your accent tells your unique story</li>
+                  <li>• Slow down for important points</li>
+                  <li>• Enunciate consonants clearly</li>
+                  <li>• Use pauses strategically</li>
+                  <li>• Practice tongue twisters</li>
                 </ul>
               </div>
             </div>
