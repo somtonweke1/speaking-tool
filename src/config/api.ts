@@ -42,6 +42,15 @@ export const SupabaseAuth = {
 
       if (error) throw error;
 
+      // Check if email confirmation is required
+      if (data.user && !data.user.email_confirmed_at) {
+        return { 
+          success: true, 
+          user: data.user,
+          message: 'Please check your email to confirm your account'
+        };
+      }
+
       // Try to create user profile in our custom table, but don't fail if table doesn't exist
       if (data.user) {
         try {

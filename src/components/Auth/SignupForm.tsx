@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, UserPlus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, Mail, Lock, User, UserPlus, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import { SupabaseAuth } from '../../config/api';
 
 interface SignupFormProps {
@@ -19,6 +19,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin, onSignupSucces
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [signupStep, setSignupStep] = useState<'form' | 'success' | 'email-sent'>('form');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -48,7 +49,13 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin, onSignupSucces
       const result = await SupabaseAuth.register(formData.name, formData.email, formData.password);
       
       if (result.success) {
-        onSignupSuccess(result.user);
+        // Check if email confirmation is required
+        if (result.user && !result.user.email_confirmed_at) {
+          setSignupStep('email-sent');
+        } else {
+          setSignupStep('success');
+          onSignupSuccess(result.user);
+        }
       } else {
         setError(result.message || 'Registration failed');
       }
@@ -59,7 +66,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin, onSignupSucces
     }
   };
 
-  return (
+  const renderForm = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -203,6 +210,84 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSwitchToLogin, onSignupSucces
         </div>
       </div>
     </motion.div>
+  );
+
+  const renderEmailSent = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-full max-w-md mx-auto"
+    >
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Mail className="w-8 h-8 text-green-600" />
+        </div>
+        
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Check Your Email!</h2>
+        <p className="text-gray-600 mb-6">
+          We've sent a confirmation email to <strong>{formData.email}</strong>
+        </p>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold text-blue-800 mb-2">Next Steps:</h3>
+          <ol className="text-sm text-blue-700 text-left space-y-1">
+            <li>1. Check your email inbox (and spam folder)</li>
+            <li>2. Click the confirmation link in the email</li>
+            <li>3. Come back here and sign in</li>
+          </ol>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => setSignupStep('form')}
+            className="w-full bg-gray-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+          >
+            ← Back to Sign Up
+          </button>
+          
+          <button
+            onClick={onSwitchToLogin}
+            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
+          >
+            Go to Sign In <ArrowRight className="w-4 h-4 ml-2" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderSuccess = () => (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-full max-w-md mx-auto"
+    >
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle className="w-8 h-8 text-green-600" />
+        </div>
+        
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Account Created Successfully!</h2>
+        <p className="text-gray-600 mb-6">
+          Welcome to SpeakingTool! Your account has been created and you're ready to start practicing.
+        </p>
+        
+        <button
+          onClick={onSwitchToLogin}
+          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
+        >
+          Sign In Now <ArrowRight className="w-4 h-4 ml-2" />
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <AnimatePresence mode="wait">
+      {signupStep === 'form' && renderForm()}
+      {signupStep === 'email-sent' && renderEmailSent()}
+      {signupStep === 'success' && renderSuccess()}
+    </AnimatePresence>
   );
 };
 
