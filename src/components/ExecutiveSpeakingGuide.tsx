@@ -202,7 +202,7 @@ const ExecutiveSpeakingGuide: React.FC<ExecutiveSpeakingGuideProps> = ({ onClose
                 <ul className="space-y-2 text-gray-700">
                   <li>• Practice your native phrases with pride</li>
                   <li>• Use your accent to emphasize key points</li>
-                  <li>• Remember: clarity > perfect pronunciation</li>
+                  <li>• Remember: clarity &gt; perfect pronunciation</li>
                   <li>• Your accent tells your unique story</li>
                 </ul>
               </div>

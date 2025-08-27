@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, BarChart3, BookOpen, Trophy, Settings } from 'lucide-react';
+import { Mic, BarChart3, BookOpen, Trophy, Settings, Server } from 'lucide-react';
 import SpeakingSession from './components/SpeakingSession';
 import ProgressDashboard from './components/ProgressDashboard';
 import QuestionLibrary from './components/QuestionLibrary';
 import Achievements from './components/Achievements';
 import SettingsPanel from './components/SettingsPanel';
+import BackendTest from './components/BackendTest';
 import { UserProgress } from './types/index';
 
-type AppView = 'session' | 'progress' | 'library' | 'achievements' | 'settings';
+type AppView = 'session' | 'progress' | 'library' | 'achievements' | 'settings' | 'backend-test';
 
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('session');
@@ -46,7 +47,8 @@ function App() {
     { id: 'progress', label: 'Progress', icon: BarChart3, color: 'text-green-600' },
     { id: 'library', label: 'Questions', icon: BookOpen, color: 'text-purple-600' },
     { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'text-yellow-600' },
-    { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' }
+    { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
+    { id: 'backend-test', label: 'Backend Test', icon: Server, color: 'text-red-600' }
   ];
 
   const renderCurrentView = () => {
@@ -61,6 +63,8 @@ function App() {
         return <Achievements progress={userProgress} />;
       case 'settings':
         return <SettingsPanel />;
+      case 'backend-test':
+        return <BackendTest />;
       default:
         return <SpeakingSession onProgressUpdate={updateProgress} />;
     }
