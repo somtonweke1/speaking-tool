@@ -31,11 +31,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onLoginSuccess 
     setError('');
 
     try {
+      console.log('🚀 LoginForm: Submitting login for:', formData.email);
       const result = await SupabaseAuth.login(formData.email, formData.password);
+      console.log('🚀 LoginForm: Login result:', result);
       
       if (result.success) {
+        console.log('✅ LoginForm: Login successful, calling onLoginSuccess');
         onLoginSuccess(result.user);
       } else {
+        console.log('❌ LoginForm: Login failed:', result.message);
         // Handle specific error cases
         if (result.message && result.message.includes('Email not confirmed')) {
           setError('Please check your email and click the confirmation link before signing in. Check your spam folder if you don\'t see it.');
@@ -46,6 +50,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onLoginSuccess 
         }
       }
     } catch (err) {
+      console.log('💥 LoginForm: Login error:', err);
       setError('Login error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -155,6 +160,28 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onLoginSuccess 
               <strong>Having trouble signing in?</strong> Make sure you've confirmed your email address by clicking the link we sent you.
             </p>
           </div>
+          
+          {/* Debug connection button */}
+          <button
+            onClick={async () => {
+              try {
+                console.log('🧪 Testing Supabase connection...');
+                const { data, error } = await SupabaseAuth.testConnection();
+                console.log('🧪 Connection test result:', { data, error });
+                if (error) {
+                  alert('Connection failed: ' + error.message);
+                } else {
+                  alert('Connection successful!');
+                }
+              } catch (err) {
+                console.log('🧪 Connection test error:', err);
+                alert('Connection test failed: ' + err);
+              }
+            }}
+            className="mt-3 text-xs text-gray-500 hover:text-gray-700 underline"
+          >
+            Test Connection
+          </button>
         </div>
       </div>
     </motion.div>

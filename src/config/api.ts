@@ -82,12 +82,17 @@ export const SupabaseAuth = {
   // Login user
   login: async (email: string, password: string) => {
     try {
+      console.log('🔐 Attempting login for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
+      console.log('🔐 Supabase auth response:', { data, error });
+
       if (error) {
+        console.log('❌ Supabase auth error:', error.message);
         // Handle specific error cases
         if (error.message.includes('Email not confirmed')) {
           return { success: false, message: 'Email not confirmed. Please check your email and click the confirmation link.' };
@@ -98,17 +103,22 @@ export const SupabaseAuth = {
         }
       }
 
+      console.log('✅ Supabase auth successful, user:', data.user);
+
       // Try to get user profile, but don't fail if table doesn't exist
       try {
+        console.log('🔍 Attempting to fetch user profile...');
         const { data: profile, error: profileError } = await supabase
           .from('users')
           .select('*')
           .eq('id', data.user.id)
           .single();
 
+        console.log('🔍 Profile fetch result:', { profile, profileError });
+
         if (profileError) {
           // Table doesn't exist or other error - create a temporary user object
-          console.log('Users table not accessible, using temporary profile');
+          console.log('⚠️ Users table not accessible, using temporary profile');
           return { 
             success: true, 
             user: {
@@ -120,10 +130,11 @@ export const SupabaseAuth = {
           };
         }
 
+        console.log('✅ Profile fetched successfully:', profile);
         return { success: true, user: profile };
       } catch (profileError) {
         // Fallback: create temporary user object
-        console.log('Profile error, using fallback user object');
+        console.log('⚠️ Profile error, using fallback user object:', profileError);
         return { 
           success: true, 
           user: {
@@ -135,6 +146,7 @@ export const SupabaseAuth = {
         };
       }
     } catch (error: any) {
+      console.log('💥 Login function error:', error);
       return { success: false, message: error.message };
     }
   },
@@ -172,6 +184,16 @@ export const SupabaseAuth = {
   isAuthenticated: async () => {
     const { data: { user } } = await supabase.auth.getUser();
     return !!user;
+  },
+
+  // Test Supabase connection
+  testConnection: async () => {
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      return { data, error };
+    } catch (error: any) {
+      return { data: null, error };
+    }
   }
 };
 
