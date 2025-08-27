@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { setupDatabase, createTablesWithRawSQL } from '../config/setupDatabase';
 import { createSimpleTables } from '../config/simpleDatabase';
+import { createWorkingTables, createTablesViaHTTP } from '../config/workingDatabase';
+import { createEmergencyTables, checkTablesExist } from '../config/emergencyDatabase';
 
 export const DatabaseSetup: React.FC = () => {
   const [isSetup, setIsSetup] = useState<boolean | null>(null);
@@ -28,17 +30,44 @@ export const DatabaseSetup: React.FC = () => {
             console.log('Database setup completed via raw SQL!');
             setIsSetup(true);
           } else {
-            // Try simple table creation
-            console.log('Trying simple table creation...');
-            const simpleSuccess = await createSimpleTables();
+                      // Try simple table creation
+          console.log('Trying simple table creation...');
+          const simpleSuccess = await createSimpleTables();
+          
+          if (simpleSuccess) {
+            console.log('Database setup completed via simple tables!');
+            setIsSetup(true);
+          } else {
+            // Try working table creation
+            console.log('Trying working table creation...');
+            const workingSuccess = await createWorkingTables();
             
-            if (simpleSuccess) {
-              console.log('Database setup completed via simple tables!');
+            if (workingSuccess) {
+              console.log('Database setup completed via working tables!');
               setIsSetup(true);
             } else {
-              console.log('All methods failed. Manual setup required.');
-              setIsSetup(false);
+              // Try HTTP table creation
+              console.log('Trying HTTP table creation...');
+              const httpSuccess = await createTablesViaHTTP();
+              
+              if (httpSuccess) {
+                console.log('Database setup completed via HTTP!');
+                setIsSetup(true);
+              } else {
+                // Try emergency method
+                console.log('🚨 Trying emergency database setup...');
+                const emergencySuccess = await createEmergencyTables();
+                
+                if (emergencySuccess) {
+                  console.log('🚨 Emergency database setup successful!');
+                  setIsSetup(true);
+                } else {
+                  console.log('❌ All methods failed. Manual setup required.');
+                  setIsSetup(false);
+                }
+              }
             }
+          }
           }
         }
       } catch (error) {
@@ -58,18 +87,28 @@ export const DatabaseSetup: React.FC = () => {
     setIsSetup(null);
     
     try {
-      const success = await setupDatabase();
-      if (success) {
-        setIsSetup(true);
-      } else {
-        const rawSQLSuccess = await createTablesWithRawSQL();
-        if (rawSQLSuccess) {
+              const success = await setupDatabase();
+        if (success) {
           setIsSetup(true);
         } else {
-          const simpleSuccess = await createSimpleTables();
-          setIsSetup(simpleSuccess);
+          const rawSQLSuccess = await createTablesWithRawSQL();
+          if (rawSQLSuccess) {
+            setIsSetup(true);
+          } else {
+            const simpleSuccess = await createSimpleTables();
+            if (simpleSuccess) {
+              setIsSetup(true);
+            } else {
+              const workingSuccess = await createWorkingTables();
+              if (workingSuccess) {
+                setIsSetup(true);
+              } else {
+                const httpSuccess = await createTablesViaHTTP();
+                setIsSetup(httpSuccess);
+              }
+            }
+          }
         }
-      }
     } catch (error) {
       console.error('Retry failed:', error);
       setIsSetup(false);
@@ -111,6 +150,20 @@ export const DatabaseSetup: React.FC = () => {
               className="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
             >
               🗄️ Go to Supabase SQL Editor
+            </button>
+
+            <button 
+              onClick={async () => {
+                const exists = await checkTablesExist();
+                if (exists) {
+                  setIsSetup(true);
+                } else {
+                  alert('Tables still do not exist. Please create them in Supabase first.');
+                }
+              }}
+              className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+            >
+              🔍 Check Table Status
             </button>
           </div>
 
