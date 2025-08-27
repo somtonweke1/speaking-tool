@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js';
+import supabase from './supabase.js';
 
 // Initialize database tables in Supabase
 export const connectDB = async () => {
