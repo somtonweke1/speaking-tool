@@ -2,10 +2,10 @@
   "name": "speaking-tool-backend",
   "version": "1.0.0",
   "description": "Backend API for SpeakingTool - AI-powered public speaking coaching",
-  "main": "src/server.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node index.js",
     "dev": "nodemon src/server.js",
     "test": "jest"
   },
