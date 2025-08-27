@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiCall } from '../config/api';
+import { SupabaseAuth } from '../config/api';
 
 interface User {
   id: string;
@@ -35,38 +35,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setIsLoading(false);
-      return;
+    const user = await SupabaseAuth.getCurrentUser();
+    if (user) {
+      setUser(user);
     }
-
-    try {
-      const response = await apiCall('/api/auth/profile');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        localStorage.removeItem('token');
-      }
-    } catch (error) {
-      localStorage.removeItem('token');
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiCall('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        setUser(data.user);
+      const result = await SupabaseAuth.login(email, password);
+      if (result.success) {
+        setUser(result.user);
         return true;
       }
       return false;
@@ -77,25 +57,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiCall('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        setUser(data.user);
+      const result = await SupabaseAuth.register(name, email, password);
+      if (result.success) {
+        setUser(result.user);
         return true;
       }
       return false;
-    } catch (error) {
+    } catch (commit) {
       return false;
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
+  const logout = async () => {
+    await SupabaseAuth.logout();
     setUser(null);
   };
 

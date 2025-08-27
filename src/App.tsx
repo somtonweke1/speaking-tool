@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, BarChart3, BookOpen, Trophy, Settings, Server, LogOut, User } from 'lucide-react';
+import { Mic, BarChart3, BookOpen, Trophy, Settings, LogOut, User } from 'lucide-react';
 import SpeakingSession from './components/SpeakingSession';
 import ProgressDashboard from './components/ProgressDashboard';
 import QuestionLibrary from './components/QuestionLibrary';
 import Achievements from './components/Achievements';
 import SettingsPanel from './components/SettingsPanel';
-import BackendTest from './components/BackendTest';
+
 import AuthContainer from './components/Auth/AuthContainer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserProgress } from './types/index';
+import { SupabaseProgress } from './config/api';
 
-type AppView = 'session' | 'progress' | 'library' | 'achievements' | 'settings' | 'backend-test';
+type AppView = 'session' | 'progress' | 'library' | 'achievements' | 'settings';
 
 function AppContent() {
   const { user, logout, isLoading } = useAuth();
@@ -24,22 +25,39 @@ function AppContent() {
     streak: 0
   });
 
-  // Load user progress from localStorage on app start
+  // Load user progress from Supabase on app start
   useEffect(() => {
-    const savedProgress = localStorage.getItem('speakingToolProgress');
-    if (savedProgress) {
-      try {
-        setUserProgress(JSON.parse(savedProgress));
-      } catch (error) {
-        console.error('Error loading saved progress:', error);
+    const loadProgress = async () => {
+      if (user?.id) {
+        const result = await SupabaseProgress.getProgress(user.id);
+        if (result.success) {
+          setUserProgress({
+            totalSessions: result.progress.total_sessions,
+            averageScore: result.progress.average_score,
+            bestScore: result.progress.best_score,
+            categories: {},
+            streak: result.progress.streak
+          });
+        }
       }
-    }
-  }, []);
+    };
+    loadProgress();
+  }, [user]);
 
-  // Save user progress to localStorage whenever it changes
+  // Save user progress to Supabase whenever it changes
   useEffect(() => {
-    localStorage.setItem('speakingToolProgress', JSON.stringify(userProgress));
-  }, [userProgress]);
+    const saveProgress = async () => {
+      if (user?.id) {
+        await SupabaseProgress.updateProgress(user.id, {
+          total_sessions: userProgress.totalSessions,
+          average_score: userProgress.averageScore,
+          best_score: userProgress.bestScore,
+          streak: userProgress.streak
+        });
+      }
+    };
+    saveProgress();
+  }, [userProgress, user]);
 
   const updateProgress = (newProgress: Partial<UserProgress>) => {
     setUserProgress(prev => ({ ...prev, ...newProgress }));
@@ -56,7 +74,7 @@ function AppContent() {
     { id: 'library', label: 'Questions', icon: BookOpen, color: 'text-purple-600' },
     { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'text-yellow-600' },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'text-gray-600' },
-    { id: 'backend-test', label: 'Backend Test', icon: Server, color: 'text-red-600' }
+
   ];
 
   const renderCurrentView = () => {
@@ -71,8 +89,7 @@ function AppContent() {
         return <Achievements progress={userProgress} />;
       case 'settings':
         return <SettingsPanel />;
-      case 'backend-test':
-        return <BackendTest />;
+
       default:
         return <SpeakingSession onProgressUpdate={updateProgress} />;
     }

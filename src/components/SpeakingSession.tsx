@@ -5,10 +5,11 @@ import { SpeakingQuestion, SpeechAnalysis, FeedbackItem, UserProgress } from '..
 import { getRandomQuestion } from '../data/questions';
 import { SpeechAnalyzer } from '../utils/speechAnalysis';
 import { SpeechRecognitionManager } from '../utils/speechRecognition';
+import { SupabaseProgress, SupabaseSessions } from '../config/api';
 import Timer from './Timer';
 import VolumeVisualizer from './VolumeVisualizer';
 import FeedbackPanel from './FeedbackPanel';
-import ExecutiveSpeakingGuide from './ExecutiveSpeakingGuide';
+
 
 interface SpeakingSessionProps {
   onProgressUpdate: (progress: Partial<UserProgress>) => void;
@@ -23,7 +24,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [error, setError] = useState<string>('');
   const [isRecording, setIsRecording] = useState(false);
-  const [showExecutiveGuide, setShowExecutiveGuide] = useState(false);
+
   
   // Real-time feedback states
   const [liveFeedback, setLiveFeedback] = useState<FeedbackItem[]>([]);
@@ -31,11 +32,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
   const [currentVolume, setCurrentVolume] = useState<number>(0);
   const [speechRate, setSpeechRate] = useState<number>(0);
   
-  // Confidence and accent empowerment states
-  const [confidenceLevel, setConfidenceLevel] = useState<number>(0);
-  const [accentStrength, setAccentStrength] = useState<number>(0);
-  const [executivePresence, setExecutivePresence] = useState<number>(0);
-  const [powerWords, setPowerWords] = useState<string[]>([]);
+
   
   const speechAnalyzer = useRef<SpeechAnalyzer | null>(null);
   const speechRecognition = useRef<SpeechRecognitionManager | null>(null);
@@ -43,17 +40,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
   const sessionDuration = useRef<number>(0);
   const analysisInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Executive-level speaking guidance
-  const executiveSpeakingTips = [
-    "Your accent is your unique voice - own it with confidence!",
-    "Speak from your diaphragm, not your throat - project your authentic self",
-    "Pause for impact - silence is a powerful speaking tool",
-    "Use your hands naturally - they're your visual punctuation",
-    "Make eye contact with your audience - connect authentically",
-    "Your ideas have value - deliver them with conviction",
-    "Slow down to emphasize key points - speed isn't power, clarity is",
-    "Breathe deeply before speaking - oxygen fuels confidence"
-  ];
+
 
   useEffect(() => {
     // Initialize speech recognition and analyzer
@@ -95,10 +82,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
       setFillerWordCount(0);
       setCurrentVolume(0);
       setSpeechRate(0);
-      setConfidenceLevel(0);
-      setAccentStrength(0);
-      setExecutivePresence(0);
-      setPowerWords([]);
+
       
       const question = getRandomQuestion();
       setCurrentQuestion(question);
@@ -180,24 +164,8 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
       setSpeechRate(currentAnalysis.clarity.speechRate);
       setFillerWordCount(currentAnalysis.clarity.fillerWordCount);
       
-      // Calculate confidence indicators
-      const newConfidence = calculateConfidenceLevel(currentAnalysis);
-      setConfidenceLevel(newConfidence);
-      
-      // Calculate accent strength (volume + clarity)
-      const newAccentStrength = (currentAnalysis.volume.consistency + currentAnalysis.clarity.articulation) / 2;
-      setAccentStrength(newAccentStrength);
-      
-      // Calculate executive presence
-      const newExecutivePresence = calculateExecutivePresence(currentAnalysis);
-      setExecutivePresence(newExecutivePresence);
-      
-      // Detect power words
-      const detectedPowerWords = detectPowerWords(transcript);
-      setPowerWords(detectedPowerWords);
-      
       // Generate real-time feedback
-      const newFeedback = generateRealTimeFeedback(currentAnalysis, newConfidence, newAccentStrength);
+      const newFeedback = generateRealTimeFeedback(currentAnalysis);
       setLiveFeedback(prev => [...prev, ...newFeedback]);
       
     } catch (error) {
@@ -205,98 +173,28 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
     }
   };
 
-  const calculateConfidenceLevel = (analysis: SpeechAnalysis): number => {
-    let confidence = 50; // Base confidence
-    
-    // Volume contributes to confidence
-    if (analysis.volume.consistency > 80) confidence += 20;
-    else if (analysis.volume.consistency > 60) confidence += 10;
-    
-    // Clarity contributes to confidence
-    if (analysis.clarity.fillerWordCount < 3) confidence += 15;
-    if (analysis.clarity.speechRate > 120 && analysis.clarity.speechRate < 180) confidence += 15;
-    
-    // Coherence contributes to confidence
-    if (analysis.coherence.relevanceScore > 85) confidence += 20;
-    if (analysis.coherence.structureScore > 80) confidence += 20;
-    
-    return Math.min(100, confidence);
-  };
-
-  const calculateExecutivePresence = (analysis: SpeechAnalysis): number => {
-    let presence = 50; // Base presence
-    
-    // Strong volume = strong presence
-    if (analysis.volume.consistency > 85) presence += 25;
-    
-    // Clear articulation = professional presence
-    if (analysis.clarity.articulation > 80) presence += 25;
-    
-    // Structured thinking = executive thinking
-    if (analysis.coherence.structureScore > 85) presence += 25;
-    
-    // Relevant content = strategic thinking
-    if (analysis.coherence.relevanceScore > 90) presence += 25;
-    
-    return Math.min(100, presence);
-  };
-
-  const detectPowerWords = (transcript: string): string[] => {
-    const powerWords = [
-      'confidence', 'expertise', 'leadership', 'strategy', 'innovation',
-      'excellence', 'achievement', 'success', 'vision', 'impact',
-      'transformation', 'breakthrough', 'solution', 'opportunity', 'potential',
-      'commitment', 'dedication', 'passion', 'drive', 'determination'
-    ];
-    
-    const detected = powerWords.filter(word => 
-      transcript.toLowerCase().includes(word.toLowerCase())
-    );
-    
-    return detected;
-  };
-
-  const generateRealTimeFeedback = (analysis: SpeechAnalysis, confidence: number, accentStrength: number): FeedbackItem[] => {
+  const generateRealTimeFeedback = (analysis: SpeechAnalysis): FeedbackItem[] => {
     const feedback: FeedbackItem[] = [];
     
-    // Confidence-building feedback
-    if (confidence < 60) {
-      feedback.push({
-        type: 'improvement',
-        category: 'confidence',
-        message: 'Build your speaking confidence',
-        suggestion: 'Take a deep breath and remember: your voice matters. Speak from your core, not your throat.',
-        priority: 'high'
-      });
-    } else if (confidence > 80) {
-      feedback.push({
-        type: 'positive',
-        category: 'confidence',
-        message: 'Excellent confidence level!',
-        suggestion: 'You\'re projecting authority and presence. Keep this energy!',
-        priority: 'low'
-      });
-    }
-    
-    // Accent empowerment feedback
-    if (accentStrength < 70) {
-      feedback.push({
-        type: 'improvement',
-        category: 'accent',
-        message: 'Embrace your accent with power',
-        suggestion: 'Your accent is your unique signature. Project it with confidence - it adds authenticity to your message.',
-        priority: 'medium'
-      });
-    }
-    
-    // Executive presence feedback
+    // Volume feedback
     if (analysis.volume.consistency < 75) {
       feedback.push({
         type: 'improvement',
-        category: 'presence',
-        message: 'Project your executive presence',
-        suggestion: 'Speak from your diaphragm. Imagine filling the room with your voice - you have important things to say!',
+        category: 'volume',
+        message: 'Project your voice better',
+        suggestion: 'Speak from your diaphragm. Practice breathing exercises to improve volume control.',
         priority: 'high'
+      });
+    }
+    
+    // Clarity feedback
+    if (analysis.clarity.fillerWordCount > 5) {
+      feedback.push({
+        type: 'improvement',
+        category: 'clarity',
+        message: 'Reduce filler words',
+        suggestion: 'Replace "um", "uh", "like" with confident pauses. Pauses show thoughtfulness.',
+        priority: 'medium'
       });
     }
     
@@ -327,35 +225,35 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
   const generateComprehensiveFeedback = (analysis: SpeechAnalysis, transcript: string): FeedbackItem[] => {
     const feedback: FeedbackItem[] = [];
     
-    // Executive-level feedback
+    // High score feedback
     if (analysis.overallScore > 85) {
       feedback.push({
         type: 'positive',
-        category: 'executive',
-        message: 'Executive-level speaking achieved!',
-        suggestion: 'You\'re demonstrating consultant-level communication skills. Your presence commands attention.',
+        category: 'general',
+        message: 'Excellent speaking performance!',
+        suggestion: 'You\'re demonstrating strong communication skills. Keep practicing to maintain this level.',
         priority: 'low'
       });
     }
     
-    // Volume feedback with accent empowerment
+    // Volume feedback
     if (analysis.volume.consistency < 70) {
       feedback.push({
         type: 'improvement',
         category: 'volume',
-        message: 'Project your authentic voice',
-        suggestion: 'Your accent is beautiful - let it be heard! Practice breathing exercises and speak from your core. Remember: soft-spoken doesn\'t mean weak - it means you have room to amplify your natural power.',
+        message: 'Improve voice projection',
+        suggestion: 'Practice breathing exercises and speak from your diaphragm. Focus on maintaining consistent volume.',
         priority: 'high'
       });
     }
     
-    // Clarity feedback for executive communication
+    // Clarity feedback
     if (analysis.clarity.fillerWordCount > 5) {
       feedback.push({
-        type: 'critical',
+        type: 'improvement',
         category: 'clarity',
-        message: 'Eliminate filler words for executive impact',
-        suggestion: 'Replace "um", "uh", "like" with confident pauses. Pauses show thoughtfulness and command. Practice the 2-second pause rule.',
+        message: 'Reduce filler words',
+        suggestion: 'Replace "um", "uh", "like" with confident pauses. Pauses show thoughtfulness.',
         priority: 'high'
       });
     }
@@ -418,9 +316,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
     return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
   };
 
-  const getRandomTip = () => {
-    return executiveSpeakingTips[Math.floor(Math.random() * executiveSpeakingTips.length)];
-  };
+
 
   if (sessionState === 'idle') {
     return (
@@ -432,54 +328,21 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
         >
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              🎤 Executive Speaking Practice
+              🎤 Speaking Practice
             </h2>
             <p className="text-xl text-gray-600 mb-6">
-              Transform your speaking skills to consultant and executive level
+              Improve your public speaking skills with real-time feedback
             </p>
             
-            {/* Executive Speaking Tips */}
+            {/* Speaking Tips */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-8">
               <div className="flex items-center justify-center mb-4">
-                <Crown className="w-8 h-8 text-yellow-600 mr-3" />
-                <h3 className="text-xl font-semibold text-gray-800">Executive Speaking Tip</h3>
+                <Lightbulb className="w-8 h-8 text-yellow-600 mr-3" />
+                <h3 className="text-xl font-semibold text-gray-800">Speaking Tip</h3>
               </div>
               <p className="text-lg text-gray-700 italic">
-                "Your accent is your unique voice - own it with confidence! Speak from your diaphragm, not your throat."
+                "Take a deep breath, speak clearly, and remember that practice makes perfect!"
               </p>
-            </div>
-            
-            {/* Confidence Building Section */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
-                <div className="flex items-center mb-3">
-                  <Target className="w-6 h-6 text-blue-600 mr-2" />
-                  <h4 className="font-semibold text-gray-800">Accent Empowerment</h4>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Your accent is your unique voice. Learn to project it with confidence and authority.
-                </p>
-              </div>
-              
-              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
-                <div className="flex items-center mb-3">
-                  <Zap className="w-6 h-6 text-green-600 mr-2" />
-                  <h4 className="font-semibold text-gray-800">Executive Presence</h4>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Build the speaking presence that commands attention in boardrooms and presentations.
-                </p>
-              </div>
-              
-              <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
-                <div className="flex items-center mb-3">
-                  <TrendingUp className="w-6 h-6 text-purple-600 mr-2" />
-                  <h4 className="font-semibold text-gray-800">Strategic Communication</h4>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Express complex ideas with clarity and impact, regardless of accent or background.
-                </p>
-              </div>
             </div>
           </div>
           
@@ -492,23 +355,8 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
             >
               🚀 Start Executive Practice Session
             </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowExecutiveGuide(true)}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center"
-            >
-              <BookOpen className="w-5 h-5 mr-2" />
-              Executive Speaking Guide
-            </motion.button>
           </div>
         </motion.div>
-        
-        {/* Executive Speaking Guide Modal */}
-        {showExecutiveGuide && (
-          <ExecutiveSpeakingGuide onClose={() => setShowExecutiveGuide(false)} />
-        )}
       </div>
     );
   }
@@ -545,7 +393,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
           
           <div className="text-gray-600">
             <p>🎤 Take a deep breath</p>
-            <p>💪 Remember: Your accent is your strength</p>
+            <p>💪 Remember: Practice makes perfect</p>
             <p>🚀 Project confidence from your core</p>
           </div>
         </motion.div>
@@ -680,7 +528,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
           className="mb-8"
         >
           <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
-            🎯 Session Results - Executive Level Assessment
+            🎯 Session Results - Speaking Assessment
           </h2>
           
           {analysis && (
@@ -690,9 +538,9 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Overall Performance</h3>
                 <div className="text-6xl font-bold text-blue-600 mb-2">{analysis.overallScore}%</div>
                 <div className="text-lg text-gray-600">
-                  {analysis.overallScore >= 90 ? 'Executive Master' :
-                   analysis.overallScore >= 80 ? 'Consultant Level' :
-                   analysis.overallScore >= 70 ? 'Emerging Leader' :
+                  {analysis.overallScore >= 90 ? 'Speaking Master' :
+                   analysis.overallScore >= 80 ? 'Advanced Speaker' :
+                   analysis.overallScore >= 70 ? 'Good Speaker' :
                    analysis.overallScore >= 60 ? 'Developing Speaker' : 'Building Foundation'}
                 </div>
               </div>
@@ -702,7 +550,7 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">Voice Projection</h3>
                 <div className="text-6xl font-bold text-green-600 mb-2">{analysis.volume.consistency}%</div>
                 <div className="text-lg text-gray-600">
-                  {analysis.volume.consistency >= 90 ? 'Commanding Presence' :
+                  {analysis.volume.consistency >= 90 ? 'Excellent Volume' :
                    analysis.volume.consistency >= 80 ? 'Strong Projection' :
                    analysis.volume.consistency >= 70 ? 'Good Volume' :
                    analysis.volume.consistency >= 60 ? 'Developing Projection' : 'Building Foundation'}
@@ -736,22 +584,8 @@ const SpeakingSession: React.FC<SpeakingSessionProps> = ({ onProgressUpdate }) =
             >
               🚀 Practice Another Session
             </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowExecutiveGuide(true)}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 rounded-lg text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              📚 View Executive Guide
-            </motion.button>
           </div>
         </motion.div>
-        
-        {/* Executive Speaking Guide Modal */}
-        {showExecutiveGuide && (
-          <ExecutiveSpeakingGuide onClose={() => setShowExecutiveGuide(false)} />
-        )}
       </div>
     );
   }

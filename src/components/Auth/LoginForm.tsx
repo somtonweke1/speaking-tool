@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
-import { apiCall } from '../../config/api';
+import { SupabaseAuth } from '../../config/api';
 
 interface LoginFormProps {
   onSwitchToSignup: () => void;
@@ -31,21 +31,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup, onLoginSuccess 
     setError('');
 
     try {
-      const response = await apiCall('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        onLoginSuccess(data.user);
+      const result = await SupabaseAuth.login(formData.email, formData.password);
+      
+      if (result.success) {
+        onLoginSuccess(result.user);
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Login failed');
+        setError(result.message || 'Login failed');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError('Login error. Please try again.');
     } finally {
       setIsLoading(false);
     }
