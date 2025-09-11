@@ -1,8 +1,8 @@
-# 🎤 SpeakingTool - AI-Powered Public Speaking Coach
+#  SpeakingTool - AI-Powered Public Speaking Coach
 
 Transform your public speaking skills with real-time AI feedback, personalized insights, and comprehensive progress tracking.
 
-## ✨ Features
+## Features
 
 - **Real-time Speech Analysis** - Instant feedback on volume, clarity, and speech rate
 - **AI-Powered Insights** - Personalized improvement suggestions based on your speaking patterns
@@ -13,7 +13,7 @@ Transform your public speaking skills with real-time AI feedback, personalized i
 - **User Authentication** - Secure signup/login with JWT tokens
 - **Session Management** - Save and review your speaking sessions
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
@@ -72,7 +72,7 @@ Transform your public speaking skills with real-time AI feedback, personalized i
 6. **Verify backend is running:**
    Visit `http://localhost:5000/health`
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Frontend (React + TypeScript)
 - **React 18** - Modern React with hooks and functional components
@@ -95,7 +95,7 @@ Transform your public speaking skills with real-time AI feedback, personalized i
 - **User Progress** - Aggregated progress metrics
 - **Password Reset Tokens** - Secure password recovery
 
-## 🔐 Authentication
+##  Authentication
 
 The app uses JWT (JSON Web Tokens) for secure authentication:
 
@@ -105,7 +105,7 @@ The app uses JWT (JSON Web Tokens) for secure authentication:
 - **Password Change**: `/api/auth/change-password` - Update password
 - **Logout**: `/api/auth/logout` - Invalidate token
 
-## 📊 API Endpoints
+##  API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - User registration
@@ -126,7 +126,7 @@ The app uses JWT (JSON Web Tokens) for secure authentication:
 - `GET /api/sessions/leaderboard` - User rankings
 - `GET /api/sessions/export` - Export session data
 
-## 🎯 Usage
+##  Usage
 
 ### 1. Sign Up
 - Visit the landing page
@@ -152,7 +152,7 @@ The app uses JWT (JSON Web Tokens) for secure authentication:
 - Celebrate achievements
 - Export your data
 
-## 🔧 Configuration
+##  Configuration
 
 ### Environment Variables
 
@@ -181,7 +181,7 @@ FRONTEND_URL=http://localhost:3000
 
 The app automatically creates tables on first run. Make sure PostgreSQL is running and accessible.
 
-## 🚀 Deployment
+##  Deployment
 
 ### Frontend (Vercel/Netlify)
 1. Build the project: `npm run build`
@@ -193,7 +193,7 @@ The app automatically creates tables on first run. Make sure PostgreSQL is runni
 2. Deploy using Git
 3. Ensure PostgreSQL is configured
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -201,17 +201,17 @@ The app automatically creates tables on first run. Make sure PostgreSQL is runni
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📝 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+##  Support
 
 - **Documentation**: Check this README
 - **Issues**: Create a GitHub issue
 - **Email**: support@speakingtool.com
 
-## 🎉 Acknowledgments
+##  Acknowledgments
 
 - Built with modern web technologies
 - Inspired by the need for accessible public speaking practice
@@ -220,6 +220,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Ready to transform your speaking skills?** 🎤✨
+**Ready to transform your speaking skills?** 🎤
 
 Start your free trial today and join thousands of users improving their public speaking with AI-powered coaching!
